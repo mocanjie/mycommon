@@ -35,6 +35,7 @@
     </licenses>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
         <lombok.version>1.18.20</lombok.version>
         <validation-api.version>2.0.1.Final</validation-api.version>
