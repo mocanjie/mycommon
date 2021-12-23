@@ -1,35 +1,40 @@
 package io.github.mocanjie.base.mycommon.data;
 
+import lombok.Data;
+
 /**
  * 输出类
  * @author mo
  *
  */
-public class ResponseResult {
-	
+@Data
+public class ResponseResult<T> {
 	protected int code = 200;
-	protected String msg = "";
-	
-	public ResponseResult(int code, String msg) {
-		super();
+	protected String msg = "OK";
+	protected T data;
+
+	public ResponseResult(T data) {
+		this.data = data;
+	}
+
+	public ResponseResult(int code,T data) {
+		this.code = code;
+		this.data = data;
+	}
+
+	public ResponseResult(String msg,T data) {
+		this.msg = msg;
+		this.data = data;
+	}
+
+	public ResponseResult(int code, String msg,T data) {
 		this.code = code;
 		this.msg = msg;
+		this.data = data;
 	}
-	
-	public int getCode() {
-		return code;
-	}
-	public void setCode(int code) {
-		this.code = code;
-	}
-	public String getMsg() {
-		return msg;
-	}
-	public void setMsg(String msg) {
-		this.msg = msg;
-	}
+
 	public ResponseResult() {
-		super();
 	}
+	
 
 }

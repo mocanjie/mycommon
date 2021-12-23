@@ -1,8 +1,9 @@
 package io.github.mocanjie.base.mycommon.pager;
 
 
-import java.util.Collection;
-import java.util.Collections;
+import lombok.Data;
+
+import java.util.List;
 import java.util.Map;
 
 
@@ -12,16 +13,18 @@ import java.util.Map;
  * @author canjie.mo 
  * @since 2016年7月19日
  */
-public class Pager{
+@Data
+public class Pager<T>{
 	
 	private long currentPage = 1L;
 	private int pageSize = 10;
 	private long totalRows;
 	private long totalPages;
 	private long startRow;
-	private Collection<?> pageData = Collections.emptyList();
+	private List<T> pageData;
 	
 	//清汇新增参数
+
 	private String order = "";//排序方式
 	private String sort = "";//排序字段
 	
@@ -93,11 +96,11 @@ public class Pager{
 		this.startRow = startRow;
 	}
 
-	public Collection<?> getPageData() {
+	public List<T> get() {
 		return pageData;
 	}
 
-	public void setPageData(Collection<?> pageData) {
+	public void setPageData(List<T> pageData) {
 		this.pageData = pageData;
 	}
 
