@@ -1,17 +1,6 @@
 package io.github.mocanjie.base.mycommon.aspect;
 
 import io.github.mocanjie.base.mycommon.exception.BusinessException;
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
-import javax.validation.executable.ExecutableValidator;
-
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
@@ -20,7 +9,16 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
-import org.springframework.stereotype.Component;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
+import javax.validation.executable.ExecutableValidator;
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 
@@ -31,7 +29,6 @@ import org.springframework.stereotype.Component;
  *
  */
 @Aspect
-@Component
 public class RequestParamValidAspect {
 
     @Pointcut("@annotation(org.springframework.validation.annotation.Validated) ")
