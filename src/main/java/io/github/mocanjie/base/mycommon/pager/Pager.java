@@ -16,7 +16,7 @@ import java.util.Map;
 @Data
 public class Pager<T>{
 	
-	private long currentPage = 1L;
+	private long pageNo = 1L;
 	private int pageSize = 10;
 	private long totalRows;
 	private long totalPages;
@@ -31,19 +31,19 @@ public class Pager<T>{
 	private Boolean ignoreCount = false;//忽略分页
 	
 	public Pager(int pageSize) {
-		currentPage = 1L;
+		pageNo = 1L;
 		startRow = 0L;
 		this.pageSize = pageSize;
 	}
 
 
 	public Pager() {
-		currentPage = 1L;
+		pageNo = 1L;
 		startRow = 0L;
 	}
 
 	public Pager(Map<String, Object> request, int pageSize) {
-		currentPage = (request.get("currentPage") == null ? 1L : Integer.parseInt(String.valueOf(request.get("currentPage"))));
+		pageNo = (request.get("pageNo") == null ? 1L : Integer.parseInt(String.valueOf(request.get("pageNo"))));
 		startRow = 0L;
 		this.pageSize = pageSize;
 	}
@@ -51,11 +51,11 @@ public class Pager<T>{
 	
 
 	
-	public long getCurrentPage() {
-		return currentPage;
+	public long getPageNo() {
+		return pageNo;
 	}
-	public void setCurrentPage(long currentPage) {
-		this.currentPage = currentPage;
+	public void setPageNo(long pageNo) {
+		this.pageNo = pageNo;
 	}
 	public int getPageSize() {
 		return pageSize;
@@ -73,13 +73,13 @@ public class Pager<T>{
 		if (mod > 0L) {
 		  totalPages += 1L;
 		}
-		if (currentPage > totalPages)
-		  currentPage = totalPages;
-		startRow = ((currentPage - 1L) * pageSize);
+		if (pageNo > totalPages)
+			pageNo = totalPages;
+		startRow = ((pageNo - 1L) * pageSize);
 		if (startRow < 0L)
 		  startRow = 0L;
-		if (currentPage <= 0L)
-		  currentPage = 1L;
+		if (pageNo <= 0L)
+			pageNo = 1L;
 	}
 	public long getTotalPages() {
 		return totalPages;
@@ -89,7 +89,7 @@ public class Pager<T>{
 	}
 
 	public long getStartRow() {
-		return startRow != 0L ? startRow : (currentPage - 1L) * pageSize;
+		return startRow != 0L ? startRow : (pageNo - 1L) * pageSize;
 	}
 
 	public void setStartRow(long startRow) {

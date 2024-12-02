@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.mocanjie</groupId>
     <artifactId>mycommon</artifactId>
-    <version>2.0.2</version>
+    <version>2402</version>
     <name>${project.artifactId}-${project.version}</name>
     <description>${project.artifactId}-${project.version}</description>
 
