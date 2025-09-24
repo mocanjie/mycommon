@@ -1,7 +1,6 @@
 package io.github.mocanjie.base.mycommon.pager;
 
 
-import lombok.Data;
 
 import java.util.List;
 import java.util.Map;
@@ -13,14 +12,11 @@ import java.util.Map;
  * @author canjie.mo 
  * @since 2016年7月19日
  */
-@Data
-public class Pager<T>{
-	
-	private long pageNo = 1L;
-	private int pageSize = 10;
+public class Pager<T> extends PagerParam {
+
 	private long totalRows;
 	private long totalPages;
-	private long startRow;
+	private long startRow = 0L;
 	private List<T> pageData;
 	
 	//清汇新增参数
@@ -29,95 +25,109 @@ public class Pager<T>{
 	private String sort = "";//排序字段
 	
 	private Boolean ignoreCount = false;//忽略分页
+
+	public Pager<T> Pager(){
+		return this;
+	}
+
+	public Pager(int pageNum, int pageSize) {
+		this.pageNum = pageNum;
+		this.pageSize = pageSize;
+	}
 	
 	public Pager(int pageSize) {
-		pageNo = 1L;
-		startRow = 0L;
 		this.pageSize = pageSize;
 	}
 
 
 	public Pager() {
-		pageNo = 1L;
-		startRow = 0L;
 	}
 
 	public Pager(Map<String, Object> request, int pageSize) {
-		pageNo = (request.get("pageNo") == null ? 1L : Integer.parseInt(String.valueOf(request.get("pageNo"))));
-		startRow = 0L;
+		pageNum = (request.get("pageNum") == null ? 1 : Integer.parseInt(String.valueOf(request.get("pageNum"))));
 		this.pageSize = pageSize;
 	}
 	
 	
 
 	
-	public long getPageNo() {
-		return pageNo;
+	@Override
+	public Pager<T> setPageNum(int pageNum) {
+		super.setPageNum(pageNum);
+		return this;
 	}
-	public void setPageNo(long pageNo) {
-		this.pageNo = pageNo;
+
+	@Override
+	public Pager<T> setPageSize(int pageSize) {
+		super.setPageSize(pageSize);
+		return this;
 	}
-	public int getPageSize() {
-		return pageSize;
-	}
-	public void setPageSize(int pageSize) {
-		this.pageSize = pageSize;
-	}
+
 	public long getTotalRows() {
 		return totalRows;
 	}
-	public void setTotalRows(long totalRows) {
+	public Pager<T> setTotalRows(long totalRows) {
 		this.totalRows = totalRows;
 		totalPages = (totalRows / pageSize);
 		long mod = totalRows % pageSize;
 		if (mod > 0L) {
 		  totalPages += 1L;
 		}
-		if (pageNo > totalPages)
-			pageNo = totalPages;
-		startRow = ((pageNo - 1L) * pageSize);
+		if (pageNum > totalPages)
+			pageNum = (int) totalPages;
+		startRow = ((pageNum - 1) * pageSize);
 		if (startRow < 0L)
 		  startRow = 0L;
-		if (pageNo <= 0L)
-			pageNo = 1L;
+		if (pageNum <= 0)
+			pageNum = 1;
+		return this;
 	}
 	public long getTotalPages() {
 		return totalPages;
 	}
-	public void setTotalPages(long totalPages) {
+	public Pager<T> setTotalPages(long totalPages) {
 		this.totalPages = totalPages;
+		return this;
 	}
 
 	public long getStartRow() {
-		return startRow != 0L ? startRow : (pageNo - 1L) * pageSize;
+		return startRow != 0L ? startRow : (pageNum - 1) * pageSize;
 	}
 
-	public void setStartRow(long startRow) {
+	public Pager<T> setStartRow(long startRow) {
 		this.startRow = startRow;
+		return this;
+	}
+
+	public List<T> getPageData() {
+		return pageData;
 	}
 
 	public List<T> get() {
 		return pageData;
 	}
 
-	public void setPageData(List<T> pageData) {
+	public Pager<T> setPageData(List<T> pageData) {
 		this.pageData = pageData;
+		return this;
 	}
 
 	public String getOrder() {
 		return order;
 	}
 
-	public void setOrder(String order) {
+	public Pager<T> setOrder(String order) {
 		this.order = order;
+		return this;
 	}
 
 	public String getSort() {
 		return sort;
 	}
 
-	public void setSort(String sort) {
+	public Pager<T> setSort(String sort) {
 		this.sort = sort;
+		return this;
 	}
 
 	public Boolean getIgnoreCount() {
