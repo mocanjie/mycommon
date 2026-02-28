@@ -1,37 +1,37 @@
 package io.github.mocanjie.base.mycommon;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 public class IdGen {
-	
-	private long workerId;
-    private long datacenterId;
+
+    // 起始时间戳: Thu, 04 Nov 2010 01:42:54 GMT
+    private static final long TWEPOCH = 1288834974657L;
+
+    private static final long WORKER_ID_BITS = 5L;
+    private static final long DATACENTER_ID_BITS = 5L;
+    private static final long MAX_WORKER_ID = -1L ^ (-1L << WORKER_ID_BITS);         // 最大 31
+    private static final long MAX_DATACENTER_ID = -1L ^ (-1L << DATACENTER_ID_BITS); // 最大 31
+    private static final long SEQUENCE_BITS = 12L;
+    private static final long WORKER_ID_SHIFT = SEQUENCE_BITS;
+    private static final long DATACENTER_ID_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS;
+    private static final long TIMESTAMP_LEFT_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS + DATACENTER_ID_BITS;
+    private static final long SEQUENCE_MASK = -1L ^ (-1L << SEQUENCE_BITS);          // 最大 4095
+
+    // 允许的最大时钟回拨毫秒数，超出则抛异常
+    private static final long MAX_BACKWARD_MS = 5L;
+
+    private final long workerId;
+    private final long datacenterId;
+    private final ReentrantLock lock = new ReentrantLock();
+
     private long sequence = 0L;
-    private long twepoch = 1288834974657L;
-     //Thu, 04 Nov 2010 01:42:54 GMT
-    private long workerIdBits = 5L;
-     //节点ID长度
-    private long datacenterIdBits = 5L;
-     //数据中心ID长度
-    private long maxWorkerId = -1L ^ (-1L << workerIdBits);
-     //最大支持机器节点数0~31，一共32个
-    private long maxDatacenterId = -1L ^ (-1L << datacenterIdBits);
-     //最大支持数据中心节点数0~31，一共32个
-    private long sequenceBits = 12L;
-     //序列号12位
-    private long workerIdShift = sequenceBits;
-     //机器节点左移12位
-    private long datacenterIdShift = sequenceBits + workerIdBits;
-     //数据中心节点左移17位
-    private long timestampLeftShift = sequenceBits + workerIdBits + datacenterIdBits;
-     //时间毫秒数左移22位
-    private long sequenceMask = -1L ^ (-1L << sequenceBits);
-     //最大为4095
     private long lastTimestamp = -1L;
-    
+
     private static class IdGenHolder {
         private static final IdGen instance = new IdGen();
     }
-    
-    public static IdGen get(){
+
+    public static IdGen get() {
         return IdGenHolder.instance;
     }
 
@@ -40,47 +40,53 @@ public class IdGen {
     }
 
     public IdGen(long workerId, long datacenterId) {
-        if (workerId > maxWorkerId || workerId < 0) {
-            throw new IllegalArgumentException(String.format("worker Id can't be greater than %d or less than 0", maxWorkerId));
+        if (workerId > MAX_WORKER_ID || workerId < 0) {
+            throw new IllegalArgumentException(
+                    String.format("workerId must be between 0 and %d", MAX_WORKER_ID));
         }
-        if (datacenterId > maxDatacenterId || datacenterId < 0) {
-            throw new IllegalArgumentException(String.format("datacenter Id can't be greater than %d or less than 0", maxDatacenterId));
+        if (datacenterId > MAX_DATACENTER_ID || datacenterId < 0) {
+            throw new IllegalArgumentException(
+                    String.format("datacenterId must be between 0 and %d", MAX_DATACENTER_ID));
         }
         this.workerId = workerId;
         this.datacenterId = datacenterId;
     }
-    
-    public synchronized long nextId() {
-        long timestamp = timeGen();
-        //获取当前毫秒数
-        //如果服务器时间有问题(时钟后退) 报错。
-        if (timestamp < lastTimestamp) {
-            throw new RuntimeException(String.format(
-                    "Clock moved backwards.  Refusing to generate id for %d milliseconds", lastTimestamp - timestamp));
-        }
-        //如果上次生成时间和当前时间相同,在同一毫秒内
-        if (lastTimestamp == timestamp) {
-            //sequence自增，因为sequence只有12bit，所以和sequenceMask相与一下，去掉高位
-            sequence = (sequence + 1) & sequenceMask;
-            //判断是否溢出,也就是每毫秒内超过4095，当为4096时，与sequenceMask相与，sequence就等于0
-            if (sequence == 0) {
-                timestamp = tilNextMillis(lastTimestamp);
-                 //自旋等待到下一毫秒
+
+    public long nextId() {
+        lock.lock();
+        try {
+            long timestamp = timeGen();
+
+            if (timestamp < lastTimestamp) {
+                long backward = lastTimestamp - timestamp;
+                if (backward <= MAX_BACKWARD_MS) {
+                    // 小幅回拨，等待时钟追上
+                    timestamp = tilNextMillis(lastTimestamp);
+                } else {
+                    throw new RuntimeException(String.format(
+                            "Clock moved backwards. Refusing to generate id for %d milliseconds", backward));
+                }
             }
-        } else {
-            sequence = 0L;
-             //如果和上次生成时间不同,重置sequence，就是下一毫秒开始，sequence计数重新从0开始累加
+
+            if (lastTimestamp == timestamp) {
+                sequence = (sequence + 1) & SEQUENCE_MASK;
+                if (sequence == 0) {
+                    // 当前毫秒序列号耗尽，等待下一毫秒
+                    timestamp = tilNextMillis(lastTimestamp);
+                }
+            } else {
+                sequence = 0L;
+            }
+
+            lastTimestamp = timestamp;
+
+            return ((timestamp - TWEPOCH) << TIMESTAMP_LEFT_SHIFT)
+                    | (datacenterId << DATACENTER_ID_SHIFT)
+                    | (workerId << WORKER_ID_SHIFT)
+                    | sequence;
+        } finally {
+            lock.unlock();
         }
-        lastTimestamp = timestamp;
-        // 最后按照规则拼出ID。
-        // 000000000000000000000000000000000000000000  00000            00000       000000000000
-        // time                                      datacenterId      workerId     sequence
-         // return ((timestamp - twepoch) << timestampLeftShift) | (datacenterId << datacenterIdShift)
-         //        | (workerId << workerIdShift) | sequence;
-         
-         long longStr= ((timestamp - twepoch) << timestampLeftShift) | (datacenterId << datacenterIdShift) | (workerId << workerIdShift) | sequence;
-         // System.out.println(longStr);
-         return longStr;
     }
 
     protected long tilNextMillis(long lastTimestamp) {
@@ -94,12 +100,4 @@ public class IdGen {
     protected long timeGen() {
         return System.currentTimeMillis();
     }
-    
-    
-    public static void main(String[] args) {
-    	for(int i =0;i<10000;i++){
-    		System.out.println(IdGen.get().nextId());
-    	}
-	}
-
 }

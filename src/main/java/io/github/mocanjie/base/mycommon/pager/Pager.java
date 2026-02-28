@@ -75,11 +75,9 @@ public class Pager<T> extends PagerParam {
 		}
 		if (pageNum > totalPages)
 			pageNum = (int) totalPages;
-		startRow = ((pageNum - 1) * pageSize);
-		if (startRow < 0L)
-		  startRow = 0L;
 		if (pageNum <= 0)
 			pageNum = 1;
+		startRow = ((pageNum - 1) * pageSize);
 		return this;
 	}
 	public long getTotalPages() {
